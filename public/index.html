@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>MAFIA NOIR V3</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<div class="bg-city"></div>
+<div class="bg-overlay"></div>
+<div id="rainContainer" class="rain-container"></div>
+
+<!-- ══ LANDING ══ -->
+<div class="screen active" id="screenLanding">
+  <div class="landing-content">
+    <div class="logo-wrap">
+      <div class="logo-icon">🎭</div>
+      <h1 class="logo-title">MAFIA NOIR</h1>
+      <p class="logo-sub">لعبة الخداع والذكاء</p>
+    </div>
+    <div class="landing-buttons">
+      <button class="btn btn-primary" onclick="UI.show('screenCreate')">🏠 إنشاء غرفة</button>
+      <button class="btn btn-secondary" onclick="UI.show('screenJoin')">🚪 انضمام</button>
+      <button class="btn btn-ghost" onclick="UI.show('screenAuth')">👤 تسجيل الدخول</button>
+      <button class="btn btn-ghost" onclick="showPublicRooms()">🌐 الغرف العامة</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ AUTH ══ -->
+<div class="screen" id="screenAuth">
+  <div class="form-card">
+    <button class="btn-back" onclick="UI.show('screenLanding')">← رجوع</button>
+    <h2 class="form-title">الدخول</h2>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">دخول</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">تسجيل</button>
+      <button class="auth-tab" onclick="switchAuthTab('guest')">زائر</button>
+    </div>
+    <div id="authLogin">
+      <div class="input-group"><label>اسم المستخدم</label><input id="loginUser" type="text" placeholder="اسمك..."/></div>
+      <div class="input-group"><label>كلمة المرور</label><input id="loginPass" type="password" placeholder="••••••"/></div>
+      <button class="btn btn-primary full-width" onclick="authLogin()">دخول</button>
+    </div>
+    <div id="authRegister" style="display:none">
+      <div class="input-group"><label>اسم المستخدم</label><input id="regUser" type="text" placeholder="اسمك..."/></div>
+      <div class="input-group"><label>كلمة المرور</label><input id="regPass" type="password" placeholder="••••••"/></div>
+      <button class="btn btn-primary full-width" onclick="authRegister()">تسجيل</button>
+    </div>
+    <div id="authGuest" style="display:none">
+      <div class="input-group"><label>اسمك في اللعبة</label><input id="guestName" type="text" placeholder="اسم الزائر..."/></div>
+      <button class="btn btn-primary full-width" onclick="authGuest()">دخول كزائر</button>
+    </div>
+    <p class="form-error" id="authError"></p>
+  </div>
+</div>
+
+<!-- ══ CREATE ROOM ══ -->
+<div class="screen" id="screenCreate">
+  <div class="form-card">
+    <button class="btn-back" onclick="UI.show('screenLanding')">← رجوع</button>
+    <h2 class="form-title">إنشاء غرفة</h2>
+    <div class="input-group"><label>اسمك</label><input id="createName" type="text" placeholder="أدخل اسمك..." maxlength="20"/></div>
+    <div class="input-group">
+      <label>خاصية الغرفة</label>
+      <select id="createPrivacy" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:10px;color:var(--text);width:100%">
+        <option value="private">🔒 خاصة (بكود)</option>
+        <option value="public">🌐 عامة</option>
+      </select>
+    </div>
+    <div class="input-group">
+      <label>حد اللاعبين</label>
+      <input id="createMax" type="number" min="4" max="10" value="10" style="background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;padding:10px;color:var(--text);width:100%"/>
+    </div>
+    <button class="btn btn-primary full-width" onclick="createRoom()">🎭 إنشاء</button>
+    <p class="form-error" id="createError"></p>
+  </div>
+</div>
+
+<!-- ══ JOIN ROOM ══ -->
+<div class="screen" id="screenJoin">
+  <div class="form-card">
+    <button class="btn-back" onclick="UI.show('screenLanding')">← رجوع</button>
+    <h2 class="form-title">انضمام لغرفة</h2>
+    <div class="input-group"><label>كود الغرفة</label><input id="joinCode" type="text" placeholder="XXXX" maxlength="4" style="letter-spacing:6px;text-align:center;font-size:1.5rem;text-transform:uppercase"/></div>
+    <div class="input-group"><label>اسمك</label><input id="joinName" type="text" placeholder="أدخل اسمك..." maxlength="20"/></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" style="flex:1" onclick="joinRoom()">🚪 انضمام</button>
+      <button class="btn btn-secondary" style="flex:1" onclick="joinRoom(true)">👁️ مشاهدة</button>
+    </div>
+    <p class="form-error" id="joinError"></p>
+  </div>
+</div>
+
+<!-- ══ LOBBY ══ -->
+<div class="screen" id="screenLobby">
+  <div class="lobby-wrap">
+    <div class="lobby-header">
+      <div class="room-code-display">
+        <span class="room-code-label">كود الغرفة</span>
+        <span class="room-code-value" id="lobbyCode">----</span>
+        <button class="btn-copy" onclick="copyCode()" title="نسخ">📋</button>
+      </div>
+      <p class="lobby-hint">شارك الكود مع أصدقائك</p>
+    </div>
+    <div class="players-grid" id="lobbyPlayers"></div>
+    <div class="lobby-footer">
+      <p class="player-count" id="lobbyCount">0/10</p>
+      <!-- Bot controls (host only) -->
+      <div id="botControls" style="display:none;gap:8px;justify-content:center;margin-bottom:8px">
+        <button class="btn btn-ghost" style="padding:8px 14px;font-size:.8rem" onclick="addBots()">🤖 إضافة بوتات</button>
+        <button class="btn btn-ghost" style="padding:8px 14px;font-size:.8rem" onclick="removeBots()">❌ حذف البوتات</button>
+      </div>
+      <button class="btn btn-primary" id="startBtn" onclick="startGame()" style="display:none">▶️ ابدأ اللعبة</button>
+      <p class="lobby-waiting" id="lobbyWaiting">في انتظار الهوست...</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══ GAME ══ -->
+<div class="screen" id="screenGame">
+
+  <!-- Top Bar -->
+  <div class="game-topbar">
+    <div class="phase-badge">
+      <span id="phaseIcon">🌙</span>
+      <span id="phaseName">الليل</span>
+    </div>
+    <span class="round-badge" id="roundBadge">الجولة 1</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button id="muteBtn" onclick="toggleMute()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text)">🔊</button>
+      <div class="timer-wrap" id="timerWrap">
+        <svg class="timer-ring" viewBox="0 0 44 44">
+          <circle class="timer-track" cx="22" cy="22" r="18"/>
+          <circle class="timer-progress" id="timerCircle" cx="22" cy="22" r="18"/>
+        </svg>
+        <span class="timer-text" id="timerText">--</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main game area: players + sidebar -->
+  <div class="game-main">
+
+    <!-- Left: players + action -->
+    <div class="game-left">
+      <!-- My Role -->
+      <div class="my-role-card" id="myRoleCard">
+        <span id="myRoleEmoji">❓</span>
+        <div>
+          <p class="my-role-label">دورك</p>
+          <p class="my-role-name" id="myRoleName">...</p>
+        </div>
+      </div>
+
+      <!-- Players Grid -->
+      <div class="game-players" id="gamePlayers"></div>
+
+      <!-- Action Panel -->
+      <div class="action-panel" id="actionPanel" style="display:none">
+        <p class="action-title" id="actionTitle"></p>
+        <p class="action-hint"  id="actionHint"></p>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="btn btn-ghost" id="skipBtn"    onclick="skipAction()"   style="display:none;flex:1">تخطي</button>
+          <button class="btn btn-ghost" id="abstainBtn" onclick="voteAbstain()"  style="display:none;flex:1">امتناع</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: chat + event log -->
+    <div class="game-right">
+
+      <!-- Chat -->
+      <div class="chat-area">
+        <div class="chat-tabs" id="chatTabs">
+          <button class="chat-tab active" data-ch="public"  onclick="switchChat('public')">💬 عام</button>
+          <button class="chat-tab"        data-ch="mafia"   onclick="switchChat('mafia')"  style="display:none">🔫 مافيا</button>
+          <button class="chat-tab"        data-ch="dead"    onclick="switchChat('dead')"   style="display:none">💀 أموات</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-wrap">
+          <input id="chatInput" type="text" placeholder="اكتب رسالة..." maxlength="200"/>
+          <button class="btn-send" onclick="sendMessage()">➤</button>
+        </div>
+      </div>
+
+      <!-- Event Log -->
+      <div class="event-log-wrap">
+        <div class="event-log-title">📋 سجل الأحداث</div>
+        <div class="event-log" id="eventLog"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ POPUPS ══ -->
+
+<!-- Role Reveal -->
+<div class="popup-overlay" id="popupRole" style="display:none">
+  <div class="popup-card">
+    <div id="revealEmoji" style="font-size:5rem">🎭</div>
+    <p style="font-size:.8rem;color:var(--text-dim);letter-spacing:2px">دورك في هذه الجولة</p>
+    <h2 id="revealName" style="font-size:2rem;color:var(--gold)"></h2>
+    <p id="revealDesc" style="font-size:.9rem;color:var(--text-dim)"></p>
+    <div id="revealMafiaTeam" style="display:none">
+      <p style="color:var(--red-light);font-weight:700">🔫 زملاؤك في المافيا:</p>
+      <div id="revealMafiaList"></div>
+    </div>
+    <button class="btn btn-primary" onclick="closePopup('popupRole')">فهمت ✓</button>
+  </div>
+</div>
+
+<!-- Night Results -->
+<div class="popup-overlay" id="popupNight" style="display:none">
+  <div class="popup-card">
+    <h2 style="color:var(--gold)">🌅 الفجر حلّ</h2>
+    <div id="nightEvents"></div>
+    <button class="btn btn-primary" onclick="closePopup('popupNight')">متابعة</button>
+  </div>
+</div>
+
+<!-- Vote Results -->
+<div class="popup-overlay" id="popupVote" style="display:none">
+  <div class="popup-card">
+    <h2 style="color:var(--gold)">⚖️ نتيجة التصويت</h2>
+    <div id="voteResult"></div>
+    <button class="btn btn-primary" onclick="closePopup('popupVote')">متابعة</button>
+  </div>
+</div>
+
+<!-- Game Over -->
+<div class="popup-overlay" id="popupGameOver" style="display:none">
+  <div class="popup-card gameover-card">
+    <div id="gameoverIcon" style="font-size:5rem"></div>
+    <h2 id="gameoverWinner" style="font-size:1.8rem"></h2>
+    <p id="gameoverReason" style="color:var(--text-dim)"></p>
+    <div id="finalPlayers" style="max-height:200px;overflow-y:auto;margin:12px 0"></div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <button class="btn btn-primary" id="restartGameBtn" onclick="restartGame()" style="display:none">🔄 جولة جديدة</button>
+      <button class="btn btn-secondary" onclick="closePopup('popupGameOver')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- Detective Result -->
+<div class="popup-overlay" id="popupDetective" style="display:none">
+  <div class="popup-card">
+    <h2 style="color:var(--gold)">🔍 نتيجة التحقيق</h2>
+    <div id="detectiveResult"></div>
+    <button class="btn btn-primary" onclick="closePopup('popupDetective')">فهمت</button>
+  </div>
+</div>
+
+<!-- Public Rooms -->
+<div class="popup-overlay" id="popupPublicRooms" style="display:none">
+  <div class="popup-card">
+    <h2 style="color:var(--gold)">🌐 الغرف العامة</h2>
+    <div id="publicRoomsList"></div>
+    <button class="btn btn-secondary" onclick="closePopup('popupPublicRooms')">إغلاق</button>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/client.js"></script>
+</body>
+</html>
